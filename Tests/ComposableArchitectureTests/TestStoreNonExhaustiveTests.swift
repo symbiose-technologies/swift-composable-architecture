@@ -103,19 +103,21 @@
     }
 
     func testCancelInFlightEffects_Strict() async {
-      let store = TestStore(
-        initialState: 0,
-        reducer: Reduce<Int, Bool> { _, action in
-          .run { _ in try await Task.sleep(nanoseconds: NSEC_PER_SEC / 4) }
-        }
-      )
+      await _withMainSerialExecutor {
+        let store = TestStore(
+          initialState: 0,
+          reducer: Reduce<Int, Bool> { _, action in
+            .run { _ in try await Task.sleep(nanoseconds: NSEC_PER_SEC / 4) }
+          }
+        )
 
-      let task = await store.send(true)
-      await task.finish(timeout: NSEC_PER_SEC / 2)
-      XCTExpectFailure {
-        $0.compactDescription == "There were no in-flight effects to skip."
+        let task = await store.send(true)
+        await task.finish(timeout: NSEC_PER_SEC / 2)
+        XCTExpectFailure {
+          $0.compactDescription == "There were no in-flight effects to skip."
+        }
+        await store.skipInFlightEffects(strict: true)
       }
-      await store.skipInFlightEffects(strict: true)
     }
 
     func testCancelInFlightEffects_NonExhaustive() async {
@@ -680,6 +682,71 @@
       }
 
       await store.receive(/NonExhaustiveReceive.Action.response2)
+    }
+
+    func testXCTModifyExhaustive() async {
+      struct State: Equatable {
+        var child: Int? = 0
+        var count = 0
+      }
+      enum Action: Equatable { case tap, response }
+      let store = TestStore(
+        initialState: State(),
+        reducer: Reduce<State, Action> { state, action in
+          switch action {
+          case .tap:
+            state.count += 1
+            return .send(.response)
+          case .response:
+            state.count += 1
+            return .none
+          }
+        }
+      )
+
+      await store.send(.tap) { state in
+        state.count = 1
+        XCTExpectFailure {
+          XCTModify(&state.child, case: /.some) { _ in }
+        } issueMatcher: {
+          $0.compactDescription == """
+            XCTModify failed: expected "Int" value to be modified but it was unchanged.
+            """
+        }
+      }
+      await store.receive(.response) { state in
+        state.count = 2
+        XCTExpectFailure {
+          XCTModify(&state.child, case: /Optional.some) { _ in }
+        } issueMatcher: {
+          $0.compactDescription == """
+            XCTModify failed: expected "Int" value to be modified but it was unchanged.
+            """
+        }
+      }
+    }
+
+    func testXCTModifyNonExhaustive() async {
+      enum Action { case tap, response }
+      let store = TestStore(
+        initialState: Optional(1),
+        reducer: Reduce<Int?, Action> { state, action in
+          switch action {
+          case .tap:
+            return .send(.response)
+          case .response:
+            return .none
+          }
+        }
+      )
+      store.exhaustivity = .off
+
+      await store.send(.tap) {
+        XCTModify(&$0, case: /Optional.some) { _ in }
+      }
+      await store.receive(.response) {
+        XCTModify(&$0, case: /Optional.some) { _ in }
+      }
     }
 
     // This example comes from Krzysztof Zabłocki's blog post:
