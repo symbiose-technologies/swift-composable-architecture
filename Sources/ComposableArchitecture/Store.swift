@@ -116,10 +116,10 @@ import Foundation
 /// #### Thread safety checks
 ///
 /// The store performs some basic thread safety checks in order to help catch mistakes. Stores
-/// constructed via the initializer ``init(initialState:reducer:)`` are assumed to run
-/// only on the main thread, and so a check is executed immediately to make sure that is the case.
-/// Further, all actions sent to the store and all scopes (see ``scope(state:action:)``) of the
-/// store are also checked to make sure that work is performed on the main thread.
+/// constructed via the initializer ``init(initialState:reducer:prepareDependencies:)`` are assumed
+/// to run only on the main thread, and so a check is executed immediately to make sure that is the
+/// case. Further, all actions sent to the store and all scopes (see ``scope(state:action:)``) of
+/// the store are also checked to make sure that work is performed on the main thread.
 public final class Store<State, Action> {
   private var bufferedActions: [Action] = []
   @_spi(Internals) public var effectCancellables: [UUID: AnyCancellable] = [:]
@@ -141,6 +141,8 @@ public final class Store<State, Action> {
   /// - Parameters:
   ///   - initialState: The state to start the application in.
   ///   - reducer: The reducer that powers the business logic of the application.
+  ///   - prepareDependencies: A closure that can be used to override dependencies that will be accessed
+  ///     by the reducer.
   public convenience init<R: ReducerProtocol>(
     initialState: @autoclosure () -> R.State,
     reducer: R,
@@ -417,9 +419,35 @@ public final class Store<State, Action> {
         }
       case let .run(priority, operation):
         tasks.wrappedValue.append(
-          Task(priority: priority) {
+          Task(priority: priority) { @MainActor in
+            #if DEBUG
+              var isCompleted = false
+              defer { isCompleted = true }
+            #endif
             await operation(
-              Send {
+              EffectTask<Action>.Send {
+                #if DEBUG
+                  if isCompleted {
+                    runtimeWarn(
+                      """
+                      An action was sent from a completed effect:
+
+                        Action:
+                          \(debugCaseOutput($0))
+
+                        Effect returned from:
+                          \(debugCaseOutput(action))
+
+                      Avoid sending actions using the 'send' argument from 'EffectTask.run' after \
+                      the effect has completed. This can happen if you escape the 'send' argument in \
+                      an unstructured context.
+
+                      To fix this, make sure that your 'run' closure does not return until you're \
+                      done calling 'send'.
+                      """
+                    )
+                  }
+                #endif
                 if let task = self.send($0, originatingFrom: action) {
                   tasks.wrappedValue.append(task)
                 }
