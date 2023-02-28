@@ -179,7 +179,7 @@ public struct ForEachStorePairs<
         //
         // Feedback filed: https://gist.github.com/stephencelis/cdf85ae8dab437adc998fb0204ed9a6b
         var element = store.state.value[id: id]!
-          var previousElement: EachState? = store.state.value.previousElementFor(id: id)
+        let previousElement: EachState? = store.state.value.previousElementFor(id: id)
         return content(
           store.scope(
             state: {
