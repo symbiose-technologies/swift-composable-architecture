@@ -159,7 +159,7 @@ public struct ForEachStorePairs<
   ///   - content: A function that can generate content given a store of an element.
   public init<EachContent>(
     _ store: Store<IdentifiedArray<ID, EachState>, (ID, EachAction)>,
-    @ViewBuilder content: @escaping (Store<EachState, EachAction>, EachState?) -> EachContent
+    @ViewBuilder content: @escaping (ID, Store<EachState, EachAction>, EachState?) -> EachContent
   )
   where
     Data == IdentifiedArray<ID, EachState>,
@@ -181,6 +181,7 @@ public struct ForEachStorePairs<
         var element = store.state.value[id: id]!
         let previousElement: EachState? = store.state.value.previousElementFor(id: id)
         return content(
+            id,
           store.scope(
             state: {
               element = $0[id: id] ?? element
