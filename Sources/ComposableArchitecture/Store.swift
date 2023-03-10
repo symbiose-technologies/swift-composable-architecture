@@ -613,7 +613,7 @@ public final class Store<State, Action> {
 /// let store: StoreOf<Feature>
 /// ```
 public typealias StoreOf<R: ReducerProtocol> = Store<R.State, R.Action>
-
+public typealias PresentationStoreOf<R: ReducerProtocol> = Store<PresentationState<R.State>, PresentationAction<R.Action>>
 #if swift(>=5.7)
   extension ReducerProtocol {
     fileprivate func rescope<ChildState, ChildAction>(
