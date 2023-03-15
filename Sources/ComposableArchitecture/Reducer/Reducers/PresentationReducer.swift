@@ -38,9 +38,6 @@ public struct PresentationState<State> {
     _modify { yield &self }
   }
 
-  // // TODO: Move to view
-  // var id: StableID? {
-
   public var id: StableID? {
     self.wrappedValue.map(StableID.init(base:))
   }
@@ -405,7 +402,6 @@ extension EffectPublisher {
     }
   }
 }
-
 
 public struct StableID: Hashable, Identifiable, Sendable {
   private let identifier: AnyHashableSendable?
