@@ -479,12 +479,6 @@ extension EffectPublisher {
   }
 }
 
-extension PresentationState {
-  // TODO: Move to view
-  var id: StableID? {
-    self.wrappedValue.map(StableID.init(base:))
-  }
-}
 
 public struct StableID: Hashable, Identifiable, Sendable {
   private let identifier: AnyHashableSendable?
