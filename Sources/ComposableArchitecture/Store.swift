@@ -317,7 +317,19 @@ public final class Store<State, Action> {
     #endif
   }
 
-  func filterSend(
+  /// Scopes the store to one that exposes child state.
+  ///
+  /// A version of ``scope(state:action:)`` that leaves the action type unchanged.
+  ///
+  /// - Parameter toChildState: A function that transforms `State` into `ChildState`.
+  /// - Returns: A new store with its domain (state and action) transformed.
+  public func scope<ChildState>(
+    state toChildState: @escaping (State) -> ChildState
+  ) -> Store<ChildState, Action> {
+    self.scope(state: toChildState, action: { $0 })
+  }
+
+  public func filterSend(
     _ isSent: @escaping (State, Action) -> Bool
   ) -> Store<State, Action> {
     self.threadCheck(status: .scope)
@@ -602,7 +614,7 @@ public final class Store<State, Action> {
 /// let store: StoreOf<Feature>
 /// ```
 public typealias StoreOf<R: ReducerProtocol> = Store<R.State, R.Action>
-
+public typealias PresentationStoreOf<R: ReducerProtocol> = Store<PresentationState<R.State>, PresentationAction<R.Action>>
 #if swift(>=5.7)
   extension ReducerProtocol {
     fileprivate func rescope<ChildState, ChildAction>(

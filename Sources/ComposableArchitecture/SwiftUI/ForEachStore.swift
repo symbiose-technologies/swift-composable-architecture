@@ -113,7 +113,7 @@ public struct ForEachStore<
         //
         // Feedback filed: https://gist.github.com/stephencelis/cdf85ae8dab437adc998fb0204ed9a6b
         var element = store.state.value[id: id]!
-        return content(
+          content(
           store.scope(
             state: {
               element = $0[id: id] ?? element
@@ -129,17 +129,6 @@ public struct ForEachStore<
   public var body: some View {
     self.content
   }
-}
-
-private func areOrderedSetsDuplicates<ID: Hashable>(lhs: OrderedSet<ID>, rhs: OrderedSet<ID>)
-  -> Bool
-{
-  var lhs = lhs
-  var rhs = rhs
-  if memcmp(&lhs, &rhs, MemoryLayout<OrderedSet<ID>>.size) == 0 {
-    return true
-  }
-  return lhs == rhs
 }
 
 
@@ -180,7 +169,7 @@ public struct ForEachStorePairs<
         // Feedback filed: https://gist.github.com/stephencelis/cdf85ae8dab437adc998fb0204ed9a6b
         var element = store.state.value[id: id]!
         let previousElement: EachState? = store.state.value.previousElementFor(id: id)
-        return content(
+          content(
             id,
           store.scope(
             state: {
@@ -236,7 +225,7 @@ public struct ForEachStoreWithID<
         //
         // Feedback filed: https://gist.github.com/stephencelis/cdf85ae8dab437adc998fb0204ed9a6b
         var element = store.state.value[id: id]!
-        return content(id,
+        content(id,
           store.scope(
             state: {
               element = $0[id: id] ?? element

@@ -75,6 +75,11 @@ public struct PresentationState<State> {
     set { self = newValue }
     _modify { yield &self }
   }
+
+
+  public var id: StableID? {
+    self.wrappedValue.map(StableID.init(base:))
+  }
 }
 
 extension PresentationState: Equatable where State: Equatable {
@@ -481,8 +486,7 @@ extension PresentationState {
   }
 }
 
-// TODO: Move to view
-struct StableID: Hashable, Sendable {
+public struct StableID: Hashable, Identifiable, Sendable {
   private let identifier: AnyHashableSendable?
   private let tag: UInt32?
   private let type: Any.Type
@@ -497,15 +501,15 @@ struct StableID: Hashable, Sendable {
     self.type = Base.self
   }
 
-  var id: Self { self }
+    public var id: Self { self }
 
-  static func == (lhs: Self, rhs: Self) -> Bool {
+    public static func == (lhs: Self, rhs: Self) -> Bool {
     lhs.identifier == rhs.identifier
       && lhs.tag == rhs.tag
       && lhs.type == rhs.type
   }
 
-  func hash(into hasher: inout Hasher) {
+    public func hash(into hasher: inout Hasher) {
     hasher.combine(self.identifier)
     hasher.combine(self.tag)
     hasher.combine(ObjectIdentifier(self.type))
