@@ -131,6 +131,9 @@ public final class Store<State, Action> {
     fileprivate var scope: AnyStoreScope?
   #endif
   @_spi(Internals) public var state: CurrentValueSubject<State, Never>
+    
+    public var symbioseState: CurrentValueSubject<State, Never> { self.state }
+    
   #if DEBUG
     private let mainThreadChecksEnabled: Bool
   #endif
