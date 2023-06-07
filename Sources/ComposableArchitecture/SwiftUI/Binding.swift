@@ -178,7 +178,7 @@ public struct BindingAction<Root>: Equatable {
   #endif
   let valueIsEqualTo: (Any) -> Bool
 
-  init(
+  public init(
     keyPath: PartialKeyPath<Root>,
     set: @escaping (inout Root) -> Void,
     value: Any,
