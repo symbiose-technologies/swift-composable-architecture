@@ -53,6 +53,7 @@ day-to-day when building applications, such as:
 - <doc:Testing>
 - <doc:Navigation>
 - <doc:Performance>
+- <doc:Navigation>
 
 ### State management
 
@@ -60,6 +61,17 @@ day-to-day when building applications, such as:
 - ``EffectTask``
 - ``Store``
 - ``ViewStore``
+
+### Navigation tools
+
+- <doc:Navigation>
+- ``PresentationState``
+- ``PresentationAction``
+- ``ReducerProtocol/ifLet(_:action:destination:fileID:line:)``
+- ``StackState``
+- ``StackAction``
+- ``ReducerProtocol/forEach(_:action:destination:fileID:line:)``
+- ``DismissEffect``
 
 ### Integrations
 

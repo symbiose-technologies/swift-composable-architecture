@@ -178,7 +178,7 @@ public struct BindingAction<Root>: Equatable {
   #endif
   let valueIsEqualTo: (Any) -> Bool
 
-  init(
+  public init(
     keyPath: PartialKeyPath<Root>,
     set: @escaping (inout Root) -> Void,
     value: Any,
@@ -252,6 +252,7 @@ extension BindingAction {
     )
   }
 }
+
 
 extension BindingAction {
   /// Transforms a binding action over some root state to some other type of root state given a
