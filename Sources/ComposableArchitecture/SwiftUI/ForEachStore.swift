@@ -100,134 +100,20 @@ public struct ForEachStore<
   where
     Data == IdentifiedArray<ID, EachState>,
     Content == WithViewStore<
-      OrderedSet<ID>, (ID, EachAction), ForEach<OrderedSet<ID>, ID, EachContent>
+      IdentifiedArray<ID, EachState>, (ID, EachAction),
+      ForEach<IdentifiedArray<ID, EachState>, ID, EachContent>
     >
   {
     self.data = store.state.value
     self.content = WithViewStore(
       store,
-      observe: { $0.ids },
-      removeDuplicates: areOrderedSetsDuplicates
+      observe: { $0 },
+      removeDuplicates: { areOrderedSetsDuplicates($0.ids, $1.ids) }
     ) { viewStore in
-      ForEach(viewStore.state, id: \.self) { id -> EachContent in
-        // NB: We cache elements here to avoid a potential crash where SwiftUI may re-evaluate
-        //     views for elements no longer in the collection.
-        //
-        // Feedback filed: https://gist.github.com/stephencelis/cdf85ae8dab437adc998fb0204ed9a6b
-        var element = store.state.value[id: id]!
-          content(
-          store.scope(
-            state: {
-              element = $0[id: id] ?? element
-              return element
-            },
-            action: { (id, $0) }
-          )
-        )
-      }
-    }
-  }
-
-  public var body: some View {
-    self.content
-  }
-}
-
-
-
-///Walks through the array in pairs, passing the previous item's, optional state to each
-public struct ForEachStorePairs<
-  EachState, EachAction, Data: Collection, ID: Hashable, Content: View
->: DynamicViewContent {
-  public let data: Data
-  let content: Content
-
-  /// Initializes a structure that computes views on demand from a store on a collection of data and
-  /// an identified action.
-  ///
-  /// - Parameters:
-  ///   - store: A store on an identified array of data and an identified action.
-  ///   - content: A function that can generate content given a store of an element.
-  public init<EachContent>(
-    _ store: Store<IdentifiedArray<ID, EachState>, (ID, EachAction)>,
-    @ViewBuilder content: @escaping (ID, Store<EachState, EachAction>, EachState?) -> EachContent
-  )
-  where
-    Data == IdentifiedArray<ID, EachState>,
-    Content == WithViewStore<
-      OrderedSet<ID>, (ID, EachAction), ForEach<OrderedSet<ID>, ID, EachContent>
-    >
-  {
-    self.data = store.state.value
-    self.content = WithViewStore(
-      store,
-      observe: { $0.ids },
-      removeDuplicates: areOrderedSetsDuplicates
-    ) { viewStore in
-      ForEach(viewStore.state, id: \.self) { id -> EachContent in
-        // NB: We cache elements here to avoid a potential crash where SwiftUI may re-evaluate
-        //     views for elements no longer in the collection.
-        //
-        // Feedback filed: https://gist.github.com/stephencelis/cdf85ae8dab437adc998fb0204ed9a6b
-        var element = store.state.value[id: id]!
-        let previousElement: EachState? = store.state.value.previousElementFor(id: id)
-          content(
-            id,
-          store.scope(
-            state: {
-              element = $0[id: id] ?? element
-              return element
-            },
-            action: { (id, $0) }
-          ),
-          previousElement
-        )
-      }
-    }
-  }
-
-  public var body: some View {
-    self.content
-  }
-}
-
-
-//Add the ID of the element to the builder
-public struct ForEachStoreWithID<
-  EachState, EachAction, Data: Collection, ID: Hashable, Content: View
->: DynamicViewContent {
-  public let data: Data
-  let content: Content
-
-  /// Initializes a structure that computes views on demand from a store on a collection of data and
-  /// an identified action.
-  ///
-  /// - Parameters:
-  ///   - store: A store on an identified array of data and an identified action.
-  ///   - content: A function that can generate content given a store of an element.
-  public init<EachContent>(
-    _ store: Store<IdentifiedArray<ID, EachState>, (ID, EachAction)>,
-    @ViewBuilder content: @escaping (ID, Store<EachState, EachAction>) -> EachContent
-  )
-  where
-    Data == IdentifiedArray<ID, EachState>,
-    Content == WithViewStore<
-      OrderedSet<ID>, (ID, EachAction), ForEach<OrderedSet<ID>, ID, EachContent>
-    >
-  {
-    self.data = store.state.value
-    self.content = WithViewStore(
-      store,
-      observe: { $0.ids },
-      removeDuplicates: areOrderedSetsDuplicates
-    ) { viewStore in
-      ForEach(viewStore.state, id: \.self) { id -> EachContent in
-        // NB: We cache elements here to avoid a potential crash where SwiftUI may re-evaluate
-        //     views for elements no longer in the collection.
-        //
-        // Feedback filed: https://gist.github.com/stephencelis/cdf85ae8dab437adc998fb0204ed9a6b
-        var element = store.state.value[id: id]!
-        content(id,
+      ForEach(viewStore.state, id: viewStore.state.id) { element in
+        var element = element
+        let id = element[keyPath: viewStore.state.id]
+        content(
           store.scope(
             state: {
               element = $0[id: id] ?? element
