@@ -512,7 +512,7 @@ public struct BindingAction<Root>: Equatable, @unchecked Sendable {
   #endif
   let valueIsEqualTo: @Sendable (Any) -> Bool
 
-  public init(
+  init(
     keyPath: PartialKeyPath<Root>,
     set: @escaping @Sendable (inout Root) -> Void,
     value: AnySendable,
