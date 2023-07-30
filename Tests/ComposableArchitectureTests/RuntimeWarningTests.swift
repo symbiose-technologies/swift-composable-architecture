@@ -5,6 +5,7 @@
 
   final class RuntimeWarningTests: BaseTCATestCase {
     func testStoreCreationMainThread() {
+      uncheckedUseMainSerialExecutor = false
       XCTExpectFailure {
         $0.compactDescription == """
           A store initialized on a non-main thread. …
@@ -41,9 +42,10 @@
         Reduce<Int, Action> { state, action in
           switch action {
           case .tap:
-            return Empty()
-              .receive(on: DispatchQueue(label: "background"))
-              .eraseToEffect()
+            return .publisher {
+              Empty()
+                .receive(on: DispatchQueue(label: "background"))
+            }
           case .response:
             return .none
           }
@@ -54,6 +56,7 @@
     }
 
     func testStoreScopeMainThread() {
+      uncheckedUseMainSerialExecutor = false
       XCTExpectFailure {
         [
           """
@@ -80,6 +83,7 @@
     }
 
     func testViewStoreSendMainThread() {
+      uncheckedUseMainSerialExecutor = false
       XCTExpectFailure {
         [
           """
@@ -168,13 +172,13 @@
           Reduce<Int, Action> { state, action in
             switch action {
             case .tap:
-              return .run { subscriber in
-                Thread.detachNewThread {
-                  XCTAssertFalse(Thread.isMainThread, "Effect should send on non-main thread.")
-                  subscriber.send(.response)
-                  subscriber.send(completion: .finished)
+              return .publisher {
+                Future { callback in
+                  Thread.detachNewThread {
+                    XCTAssertFalse(Thread.isMainThread, "Effect should send on non-main thread.")
+                    callback(.success(.response))
+                  }
                 }
-                return AnyCancellable {}
               }
             case .response:
               return .none

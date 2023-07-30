@@ -25,8 +25,8 @@ extension View {
   ///     action.
   public func alert<State, Action, ButtonAction>(
     store: Store<PresentationState<State>, PresentationAction<Action>>,
-    state toDestinationState: @escaping (State) -> AlertState<ButtonAction>?,
-    action fromDestinationAction: @escaping (ButtonAction) -> Action
+    state toDestinationState: @escaping (_ state: State) -> AlertState<ButtonAction>?,
+    action fromDestinationAction: @escaping (_ alertAction: ButtonAction) -> Action
   ) -> some View {
     self.presentation(
       store: store, state: toDestinationState, action: fromDestinationAction
@@ -46,9 +46,7 @@ extension View {
                 }
               case let .animatedSend(action, animation):
                 if let action = action {
-                  withAnimation(animation) {
-                    store.send(.presented(fromDestinationAction(action)))
-                  }
+                  store.send(.presented(fromDestinationAction(action)), animation: animation)
                 }
               }
             } label: {
@@ -80,14 +78,14 @@ extension View {
     if #available(iOS 15, macOS 12, tvOS 15, watchOS 8, *) {
       self.modifier(
         NewAlertModifier(
-          viewStore: ViewStore(store, removeDuplicates: { $0?.id == $1?.id }),
+          viewStore: ViewStore(store, observe: { $0 }, removeDuplicates: { $0?.id == $1?.id }),
           dismiss: dismiss
         )
       )
     } else {
       self.modifier(
         OldAlertModifier(
-          viewStore: ViewStore(store, removeDuplicates: { $0?.id == $1?.id }),
+          viewStore: ViewStore(store, observe: { $0 }, removeDuplicates: { $0?.id == $1?.id }),
           dismiss: dismiss
         )
       )

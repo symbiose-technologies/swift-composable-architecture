@@ -28,7 +28,7 @@ extension EffectPublisher {
   ///   - cancelInFlight: Determines if any in-flight effect with the same identifier should be
   ///     canceled before starting this new one.
   /// - Returns: A new effect that is capable of being canceled by an identifier.
-  public func cancellable(id: AnyHashable, cancelInFlight: Bool = false) -> Self {
+  public func cancellable<ID: Hashable>(id: ID, cancelInFlight: Bool = false) -> Self {
     @Dependency(\.navigationIDPath) var navigationIDPath
 
     switch self.operation {
@@ -96,14 +96,20 @@ extension EffectPublisher {
   /// - Parameter id: An effect identifier.
   /// - Returns: A new effect that will cancel any currently in-flight effect with the given
   ///   identifier.
-  public static func cancel(id: AnyHashable) -> Self {
+  public static func cancel<ID: Hashable>(id: ID) -> Self {
+    let dependencies = DependencyValues._current
     @Dependency(\.navigationIDPath) var navigationIDPath
-
-    return .fireAndForget {
-      _cancellablesLock.sync {
-        _cancellationCancellables.cancel(id: id, path: navigationIDPath)
+    return Deferred { () -> Publishers.CompactMap<Result<Action?, Failure>.Publisher, Action> in
+      DependencyValues.$_current.withValue(dependencies) {
+        _cancellablesLock.sync {
+          _cancellationCancellables.cancel(id: id, path: navigationIDPath)
+        }
       }
+      return Just<Action?>(nil)
+        .setFailureType(to: Failure.self)
+        .compactMap { $0 }
     }
+    .eraseToEffectPublisher()
   }
 }
 
@@ -133,9 +139,9 @@ extension EffectPublisher {
 /// // ...
 ///
 /// return .run { send in
-///   await withTaskCancellation(id: CancelID.response, cancelInFlight: true) {
+///   try await withTaskCancellation(id: CancelID.response, cancelInFlight: true) {
 ///     try await self.clock.sleep(for: .seconds(0.3))
-///     await .send(
+///     await send(
 ///       .debouncedResponse(TaskResult { try await environment.request() })
 ///     )
 ///   }
@@ -150,8 +156,8 @@ extension EffectPublisher {
 /// - Throws: An error thrown by the operation.
 /// - Returns: A value produced by operation.
 @_unsafeInheritExecutor
-public func withTaskCancellation<T: Sendable>(
-  id: AnyHashable,
+public func withTaskCancellation<ID: Hashable, T: Sendable>(
+  id: ID,
   cancelInFlight: Bool = false,
   operation: @Sendable @escaping () async throws -> T
 ) async rethrows -> T {
@@ -182,7 +188,7 @@ extension Task where Success == Never, Failure == Never {
   /// Cancel any currently in-flight operation with the given identifier.
   ///
   /// - Parameter id: An identifier.
-  public static func cancel<ID: Hashable & Sendable>(id: ID) {
+  public static func cancel<ID: Hashable>(id: ID) {
     @Dependency(\.navigationIDPath) var navigationIDPath
 
     return _cancellablesLock.sync {
@@ -196,8 +202,8 @@ extension Task where Success == Never, Failure == Never {
   let id: AnyHashable
   let navigationIDPath: NavigationIDPath
 
-  init(id: AnyHashable, navigationIDPath: NavigationIDPath) {
-    self.discriminator = ObjectIdentifier(type(of: id.base))
+  init<ID: Hashable>(id: ID, navigationIDPath: NavigationIDPath) {
+    self.discriminator = ObjectIdentifier(type(of: id))
     self.id = id
     self.navigationIDPath = navigationIDPath
   }
@@ -229,9 +235,9 @@ extension Result: _ErrorMechanism {}
 public class CancellablesCollection {
   var storage: [_CancelID: Set<AnyCancellable>] = [:]
 
-  func insert(
+  func insert<ID: Hashable>(
     _ cancellable: AnyCancellable,
-    at id: AnyHashable,
+    at id: ID,
     path: NavigationIDPath
   ) {
     for navigationIDPath in path.prefixes {
@@ -240,9 +246,9 @@ public class CancellablesCollection {
     }
   }
 
-  func remove(
+  func remove<ID: Hashable>(
     _ cancellable: AnyCancellable,
-    at id: AnyHashable,
+    at id: ID,
     path: NavigationIDPath
   ) {
     for navigationIDPath in path.prefixes {
@@ -254,8 +260,8 @@ public class CancellablesCollection {
     }
   }
 
-  func cancel(
-    id: AnyHashable,
+  func cancel<ID: Hashable>(
+    id: ID,
     path: NavigationIDPath
   ) {
     let cancelID = _CancelID(id: id, navigationIDPath: path)
@@ -263,8 +269,8 @@ public class CancellablesCollection {
     self.storage[cancelID] = nil
   }
 
-  func exists(
-    at id: AnyHashable,
+  func exists<ID: Hashable>(
+    at id: ID,
     path: NavigationIDPath
   ) -> Bool {
     return self.storage[_CancelID(id: id, navigationIDPath: path)] != nil

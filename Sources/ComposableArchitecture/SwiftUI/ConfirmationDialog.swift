@@ -28,8 +28,8 @@ extension View {
   ///     action.
   public func confirmationDialog<State, Action, ButtonAction>(
     store: Store<PresentationState<State>, PresentationAction<Action>>,
-    state toDestinationState: @escaping (State) -> ConfirmationDialogState<ButtonAction>?,
-    action fromDestinationAction: @escaping (ButtonAction) -> Action
+    state toDestinationState: @escaping (_ state: State) -> ConfirmationDialogState<ButtonAction>?,
+    action fromDestinationAction: @escaping (_ confirmationDialogAction: ButtonAction) -> Action
   ) -> some View {
     self.presentation(
       store: store, state: toDestinationState, action: fromDestinationAction
@@ -51,9 +51,7 @@ extension View {
                 }
               case let .animatedSend(action, animation):
                 if let action = action {
-                  withAnimation(animation) {
-                    store.send(.presented(fromDestinationAction(action)))
-                  }
+                  store.send(.presented(fromDestinationAction(action)), animation: animation)
                 }
               }
             } label: {
@@ -89,7 +87,7 @@ extension View {
     if #available(iOS 15, tvOS 15, watchOS 8, *) {
       self.modifier(
         NewConfirmationDialogModifier(
-          viewStore: ViewStore(store, removeDuplicates: { $0?.id == $1?.id }),
+          viewStore: ViewStore(store, observe: { $0 }, removeDuplicates: { $0?.id == $1?.id }),
           dismiss: dismiss
         )
       )
@@ -97,7 +95,7 @@ extension View {
       #if !os(macOS)
         self.modifier(
           OldConfirmationDialogModifier(
-            viewStore: ViewStore(store, removeDuplicates: { $0?.id == $1?.id }),
+            viewStore: ViewStore(store, observe: { $0 }, removeDuplicates: { $0?.id == $1?.id }),
             dismiss: dismiss
           )
         )
