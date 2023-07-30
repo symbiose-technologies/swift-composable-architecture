@@ -84,6 +84,7 @@ extension EffectPublisher where Failure == Never {
                     """
                     An "Effect.task" returned from "\(fileID):\(line)" threw an unhandled error. …
 
+
                     \(errorDump)
 
                     All non-cancellation errors must be explicitly handled via the "catch" \
@@ -252,23 +253,23 @@ extension TestStore {
   }
 }
 
-extension Store {
-  @available(
-    *,
-    deprecated,
-    message:
-      """
-      'Store.scope' requires an explicit 'action' transform and is intended to be used to transform a store of a parent domain into a store of a child domain.
-
-      When transforming store state into view state, use the 'observe' parameter when constructing a view store.
-      """
-  )
-  public func scope<ChildState>(
-    state toChildState: @escaping (State) -> ChildState
-  ) -> Store<ChildState, Action> {
-    self.scope(state: toChildState, action: { $0 })
-  }
-}
+//extension Store {
+//  @available(
+//    *,
+//    deprecated,
+//    message:
+//      """
+//      'Store.scope' requires an explicit 'action' transform and is intended to be used to transform a store of a parent domain into a store of a child domain.
+//
+//      When transforming store state into view state, use the 'observe' parameter when constructing a view store.
+//      """
+//  )
+//  public func scope<ChildState>(
+//    state toChildState: @escaping (State) -> ChildState
+//  ) -> Store<ChildState, Action> {
+//    self.scope(state: toChildState, action: { $0 })
+//  }
+//}
 
 extension EffectPublisher {
   @available(
