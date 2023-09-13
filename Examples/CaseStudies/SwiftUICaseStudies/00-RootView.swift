@@ -2,6 +2,7 @@ import ComposableArchitecture
 import SwiftUI
 
 struct RootView: View {
+  @State var isNavigationStackCaseStudyPresented = false
   let store: StoreOf<Root>
 
   var body: some View {
@@ -161,15 +162,10 @@ struct RootView: View {
         }
 
         Section(header: Text("Navigation")) {
-          NavigationLink(
-            "Stack",
-            destination: NavigationDemoView(
-              store: self.store.scope(
-                state: \.navigationStack,
-                action: Root.Action.navigationStack
-              )
-            )
-          )
+          Button("Stack") {
+            self.isNavigationStackCaseStudyPresented = true
+          }
+          .buttonStyle(.plain)
 
           NavigationLink(
             "Navigate and load data",
@@ -244,26 +240,6 @@ struct RootView: View {
           )
 
           NavigationLink(
-            "Lifecycle",
-            destination: LifecycleDemoView(
-              store: self.store.scope(
-                state: \.lifecycle,
-                action: Root.Action.lifecycle
-              )
-            )
-          )
-
-          NavigationLink(
-            "Elm-like subscriptions",
-            destination: ClockView(
-              store: self.store.scope(
-                state: \.clock,
-                action: Root.Action.clock
-              )
-            )
-          )
-
-          NavigationLink(
             "Recursive state and actions",
             destination: NestedView(
               store: self.store.scope(
@@ -276,6 +252,14 @@ struct RootView: View {
       }
       .navigationTitle("Case Studies")
       .onAppear { self.store.send(.onAppear) }
+      .sheet(isPresented: self.$isNavigationStackCaseStudyPresented) {
+        NavigationDemoView(
+          store: self.store.scope(
+            state: \.navigationStack,
+            action: Root.Action.navigationStack
+          )
+        )
+      }
     }
   }
 }

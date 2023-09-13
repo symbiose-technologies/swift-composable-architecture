@@ -1,9 +1,8 @@
 import Combine
-import ComposableArchitecture
+@_spi(Internals) import ComposableArchitecture
 import XCTest
 
 @MainActor
-@available(*, deprecated)
 final class EffectDebounceTests: BaseTCATestCase {
   var cancellables: Set<AnyCancellable> = []
 
@@ -11,12 +10,18 @@ final class EffectDebounceTests: BaseTCATestCase {
     let mainQueue = DispatchQueue.test
     var values: [Int] = []
 
-    func runDebouncedEffect(value: Int) {
-      struct CancelToken: Hashable {}
-      Effect.send(value)
-        .debounce(id: CancelToken(), for: 1, scheduler: mainQueue)
-        .sink { values.append($0) }
-        .store(in: &self.cancellables)
+    @discardableResult
+    func runDebouncedEffect(value: Int) -> Task<Void, Never> {
+      Task {
+        struct CancelToken: Hashable {}
+
+        let effect = Effect.send(value)
+          .debounce(id: CancelToken(), for: 1, scheduler: mainQueue)
+
+        for await action in effect.actions {
+          values.append(action)
+        }
+      }
     }
 
     runDebouncedEffect(value: 1)
@@ -56,17 +61,23 @@ final class EffectDebounceTests: BaseTCATestCase {
     var values: [Int] = []
     var effectRuns = 0
 
-    func runDebouncedEffect(value: Int) {
-      struct CancelToken: Hashable {}
+    @discardableResult
+    func runDebouncedEffect(value: Int) -> Task<Void, Never> {
+      Task {
+        struct CancelToken: Hashable {}
 
-      Deferred { () -> Just<Int> in
-        effectRuns += 1
-        return Just(value)
+        let effect = Effect.publisher {
+          Deferred { () -> Just<Int> in
+            effectRuns += 1
+            return Just(1)
+          }
+        }
+        .debounce(id: CancelToken(), for: 1, scheduler: mainQueue)
+
+        for await action in effect.actions {
+          values.append(action)
+        }
       }
-      .eraseToEffect()
-      .debounce(id: CancelToken(), for: 1, scheduler: mainQueue)
-      .sink { values.append($0) }
-      .store(in: &self.cancellables)
     }
 
     runDebouncedEffect(value: 1)

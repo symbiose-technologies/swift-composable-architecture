@@ -1,6 +1,6 @@
-struct ContentView_Previews: PreviewProvider {
+struct ContactsView_Previews: PreviewProvider {
   static var previews: some View {
-    ContentView(
+    ContactsView(
       store: Store(
         initialState: ContactsFeature.State(
           contacts: [
@@ -8,9 +8,10 @@ struct ContentView_Previews: PreviewProvider {
             Contact(id: UUID(), name: "Blob Jr"),
             Contact(id: UUID(), name: "Blob Sr"),
           ]
-        ),
-        reducer: ContactsFeature()
-      )
+        )
+      ) {
+        ContactsFeature()
+      }
     )
   }
 }

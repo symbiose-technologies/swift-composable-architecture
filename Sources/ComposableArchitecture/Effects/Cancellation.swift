@@ -1,11 +1,11 @@
 import Combine
 import Foundation
 
-extension EffectPublisher {
+extension Effect {
   /// Turns an effect into one that is capable of being canceled.
   ///
   /// To turn an effect into a cancellable one you must provide an identifier, which is used in
-  /// ``EffectPublisher/cancel(id:)-6hzsl`` to identify which in-flight effect should be canceled.
+  /// ``Effect/cancel(id:)`` to identify which in-flight effect should be canceled.
   /// Any hashable value can be used for the identifier, such as a string, but you can add a bit of
   /// protection against typos by defining a new type for the identifier:
   ///
@@ -14,9 +14,14 @@ extension EffectPublisher {
   ///
   /// case .reloadButtonTapped:
   ///   // Start a new effect to load the user
-  ///   return self.apiClient.loadUser()
-  ///     .map(Action.userResponse)
-  ///     .cancellable(id: CancelID.loadUser, cancelInFlight: true)
+  ///   return .run { send in
+  ///     await send(
+  ///       .userResponse(
+  ///         TaskResult { try await self.apiClient.loadUser() }
+  ///       )
+  ///     )
+  ///   }
+  ///   .cancellable(id: CancelID.loadUser, cancelInFlight: true)
   ///
   /// case .cancelButtonTapped:
   ///   // Cancel any in-flight requests to load the user
@@ -41,7 +46,7 @@ extension EffectPublisher {
             ()
               -> Publishers.HandleEvents<
                 Publishers.PrefixUntilOutput<
-                  AnyPublisher<Action, Failure>, PassthroughSubject<Void, Never>
+                  AnyPublisher<Action, Never>, PassthroughSubject<Void, Never>
                 >
               > in
             _cancellablesLock.lock()
@@ -99,17 +104,18 @@ extension EffectPublisher {
   public static func cancel<ID: Hashable>(id: ID) -> Self {
     let dependencies = DependencyValues._current
     @Dependency(\.navigationIDPath) var navigationIDPath
-    return Deferred { () -> Publishers.CompactMap<Result<Action?, Failure>.Publisher, Action> in
+    // NB: Ideally we'd return a `Deferred` wrapping an `Empty(completeImmediately: true)`, but
+    //     due to a bug in iOS 13.2 that publisher will never complete. The bug was fixed in
+    //     iOS 13.3, but to remain compatible with iOS 13.2 and higher we need to do a little
+    //     trickery to make sure the deferred publisher completes.
+    return .publisher { () -> Publishers.CompactMap<Just<Action?>, Action> in
       DependencyValues.$_current.withValue(dependencies) {
         _cancellablesLock.sync {
           _cancellationCancellables.cancel(id: id, path: navigationIDPath)
         }
       }
-      return Just<Action?>(nil)
-        .setFailureType(to: Failure.self)
-        .compactMap { $0 }
+      return Just<Action?>(nil).compactMap { $0 }
     }
-    .eraseToEffectPublisher()
   }
 }
 
