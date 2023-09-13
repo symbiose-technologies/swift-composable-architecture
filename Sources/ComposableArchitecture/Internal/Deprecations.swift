@@ -8,3 +8,4 @@ public typealias ReducerProtocol = Reducer
   @available(*, unavailable, renamed: "ReducerOf")
   public typealias ReducerProtocolOf<R: Reducer> = Reducer<R.State, R.Action>
 #endif
+

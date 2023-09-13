@@ -134,6 +134,9 @@ public final class Store<State, Action> {
   var parentCancellable: AnyCancellable?
   private let reducer: any Reducer<State, Action>
   @_spi(Internals) public var state: CurrentValueSubject<State, Never>
+    
+    public var symbioseState: CurrentValueSubject<State, Never> { self.state }
+    
   #if DEBUG
     private let mainThreadChecksEnabled: Bool
   #endif
