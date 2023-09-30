@@ -14,6 +14,20 @@ extension View {
       body(self, $item.isPresent(), destination)
     }
   }
+    //Symbiose Modification to fix compiler error selecting wrong overload for the Binding<AnyIdentifiable?> instead of Binding<Bool>
+    @_spi(Presentation)
+    public func presentationBool<State, Action, Content: View>(
+      store: Store<PresentationState<State>, PresentationAction<Action>>,
+      @ViewBuilder body: @escaping (
+        _ content: Self,
+        _ isPresented: Binding<Bool>,
+        _ destination: DestinationContent<State, Action>
+      ) -> Content
+    ) -> some View {
+      self.presentation(store: store) { `self`, $item, destination in
+        body(self, $item.isPresent(), destination)
+      }
+    }
 
   @_disfavoredOverload
   @_spi(Presentation)
