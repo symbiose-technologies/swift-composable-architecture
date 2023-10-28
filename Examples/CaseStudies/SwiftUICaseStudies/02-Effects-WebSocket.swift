@@ -137,7 +137,9 @@ struct WebSocket: Reducer {
 // MARK: - Feature view
 
 struct WebSocketView: View {
-  let store: StoreOf<WebSocket>
+  @State var store = Store(initialState: WebSocket.State()) {
+    WebSocket()
+  }
 
   var body: some View {
     WithViewStore(self.store, observe: { $0 }) { viewStore in
@@ -163,8 +165,7 @@ struct WebSocketView: View {
             HStack {
               TextField(
                 "Type message here",
-                text: viewStore.binding(
-                  get: \.messageToSend, send: WebSocket.Action.messageToSendChanged)
+                text: viewStore.binding(get: \.messageToSend, send: { .messageToSendChanged($0) })
               )
               .textFieldStyle(.roundedBorder)
 

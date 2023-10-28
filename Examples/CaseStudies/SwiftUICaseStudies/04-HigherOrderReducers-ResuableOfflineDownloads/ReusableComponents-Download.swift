@@ -93,10 +93,7 @@ struct CityMapRowView: View {
           Spacer()
 
           DownloadComponentView(
-            store: self.store.scope(
-              state: \.downloadComponent,
-              action: CityMap.Action.downloadComponent
-            )
+            store: self.store.scope(state: \.downloadComponent, action: { .downloadComponent($0) })
           )
           .padding(.trailing, 8)
         }
@@ -125,10 +122,7 @@ struct CityMapDetailView: View {
           Spacer()
 
           DownloadComponentView(
-            store: self.store.scope(
-              state: \.downloadComponent,
-              action: CityMap.Action.downloadComponent
-            )
+            store: self.store.scope(state: \.downloadComponent, action: { .downloadComponent($0) })
           )
         }
 
@@ -157,7 +151,9 @@ struct MapApp: Reducer {
 }
 
 struct CitiesView: View {
-  let store: StoreOf<MapApp>
+  @State var store = Store(initialState: MapApp.State(cityMaps: .mocks)) {
+    MapApp()
+  }
 
   var body: some View {
     Form {
@@ -165,7 +161,7 @@ struct CitiesView: View {
         AboutView(readMe: readMe)
       }
       ForEachStore(
-        self.store.scope(state: \.cityMaps, action: MapApp.Action.cityMaps(id:action:))
+        self.store.scope(state: \.cityMaps, action: { .cityMaps(id: $0, action: $1) })
       ) { cityMapStore in
         CityMapRowView(store: cityMapStore)
           .buttonStyle(.borderless)

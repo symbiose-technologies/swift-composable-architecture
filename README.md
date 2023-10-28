@@ -76,7 +76,7 @@ the Composable Architecture. Check out [this](./Examples) directory to see them 
 * [Motion manager](https://github.com/pointfreeco/composable-core-motion/tree/main/Examples/MotionManager)
 * [Search](./Examples/Search)
 * [Speech Recognition](./Examples/SpeechRecognition)
-* [Standups app](./Examples/Standups)
+* [SyncUps app](./Examples/SyncUps)
 * [Tic-Tac-Toe](./Examples/TicTacToe)
 * [Todos](./Examples/Todos)
 * [Voice memos](./Examples/VoiceMemos)
@@ -403,18 +403,20 @@ interacts with the real world API server:
 @main
 struct MyApp: App {
   var body: some Scene {
-    FeatureView(
-      store: Store(initialState: Feature.State()) {
-        Feature(
-          numberFact: { number in
-            let (data, _) = try await URLSession.shared.data(
-              from: URL(string: "http://numbersapi.com/\(number)")!
-            )
-            return String(decoding: data, as: UTF8.self)
-          }
-        )
-      }
-    )
+    WindowGroup {
+      FeatureView(
+        store: Store(initialState: Feature.State()) {
+          Feature(
+            numberFact: { number in
+              let (data, _) = try await URLSession.shared.data(
+                from: URL(string: "http://numbersapi.com/\(number)")!
+              )
+              return String(decoding: data, as: UTF8.self)
+            }
+          )
+        }
+      )
+    }
   }
 }
 ```
@@ -515,11 +517,13 @@ This means the entry point to the application no longer needs to construct depen
 @main
 struct MyApp: App {
   var body: some Scene {
-    FeatureView(
-      store: Store(initialState: Feature.State()) {
-        Feature()
-      }
-    )
+    WindowGroup {
+      FeatureView(
+        store: Store(initialState: Feature.State()) {
+          Feature()
+        }
+      )
+    }
   }
 }
 ```

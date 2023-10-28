@@ -46,7 +46,9 @@ struct OptionalBasics: Reducer {
 // MARK: - Feature view
 
 struct OptionalBasicsView: View {
-  let store: StoreOf<OptionalBasics>
+  @State var store = Store(initialState: OptionalBasics.State()) {
+    OptionalBasics()
+  }
 
   var body: some View {
     WithViewStore(self.store, observe: { $0 }) { viewStore in
@@ -60,20 +62,15 @@ struct OptionalBasicsView: View {
         }
 
         IfLetStore(
-          self.store.scope(
-            state: \.optionalCounter,
-            action: OptionalBasics.Action.optionalCounter
-          ),
-          then: { store in
-            Text(template: "`CounterState` is non-`nil`")
-            CounterView(store: store)
-              .buttonStyle(.borderless)
-              .frame(maxWidth: .infinity)
-          },
-          else: {
-            Text(template: "`CounterState` is `nil`")
-          }
-        )
+          self.store.scope(state: \.optionalCounter, action: { .optionalCounter($0) })
+        ) { store in
+          Text(template: "`CounterState` is non-`nil`")
+          CounterView(store: store)
+            .buttonStyle(.borderless)
+            .frame(maxWidth: .infinity)
+        } else: {
+          Text(template: "`CounterState` is `nil`")
+        }
       }
     }
     .navigationTitle("Optional state")

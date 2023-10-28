@@ -54,7 +54,9 @@ struct LoadThenPresent: Reducer {
 // MARK: - Feature view
 
 struct LoadThenPresentView: View {
-  let store: StoreOf<LoadThenPresent>
+  @State var store = Store(initialState: LoadThenPresent.State()) {
+    LoadThenPresent()
+  }
 
   var body: some View {
     WithViewStore(self.store, observe: { $0 }) { viewStore in
@@ -74,10 +76,9 @@ struct LoadThenPresentView: View {
           }
         }
       }
-      .sheet(
-        store: store.scope(state: \.$counter, action: LoadThenPresent.Action.counter),
-        content: CounterView.init(store:)
-      )
+      .sheet(store: self.store.scope(state: \.$counter, action: { .counter($0) })) { store in
+        CounterView(store: store)
+      }
       .navigationTitle("Load and present")
     }
   }

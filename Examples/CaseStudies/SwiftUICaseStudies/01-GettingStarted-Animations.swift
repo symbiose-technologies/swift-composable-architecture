@@ -100,7 +100,9 @@ struct Animations: Reducer {
 // MARK: - Feature view
 
 struct AnimationsView: View {
-  let store: StoreOf<Animations>
+  @State var store = Store(initialState: Animations.State()) {
+    Animations()
+  }
 
   var body: some View {
     WithViewStore(self.store, observe: { $0 }) { viewStore in
@@ -135,7 +137,7 @@ struct AnimationsView: View {
           "Big mode",
           isOn:
             viewStore
-            .binding(get: \.isCircleScaled, send: Animations.Action.circleScaleToggleChanged)
+            .binding(get: \.isCircleScaled, send: { .circleScaleToggleChanged($0) })
             .animation(.interactiveSpring(response: 0.25, dampingFraction: 0.1))
         )
         .padding()

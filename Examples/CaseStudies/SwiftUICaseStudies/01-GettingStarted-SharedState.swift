@@ -157,15 +157,14 @@ struct SharedState: Reducer {
 // MARK: - Feature view
 
 struct SharedStateView: View {
-  let store: StoreOf<SharedState>
+  @State var store = Store(initialState: SharedState.State()) {
+    SharedState()
+  }
 
   var body: some View {
     WithViewStore(self.store, observe: \.currentTab) { viewStore in
       VStack {
-        Picker(
-          "Tab",
-          selection: viewStore.binding(send: SharedState.Action.selectTab)
-        ) {
+        Picker("Tab", selection: viewStore.binding(send: { .selectTab($0) })) {
           Text("Counter")
             .tag(SharedState.Tab.counter)
 
@@ -176,12 +175,14 @@ struct SharedStateView: View {
 
         if viewStore.state == .counter {
           SharedStateCounterView(
-            store: self.store.scope(state: \.counter, action: SharedState.Action.counter))
+            store: self.store.scope(state: \.counter, action: { .counter($0) })
+          )
         }
 
         if viewStore.state == .profile {
           SharedStateProfileView(
-            store: self.store.scope(state: \.profile, action: SharedState.Action.profile))
+            store: self.store.scope(state: \.profile, action: { .profile($0) })
+          )
         }
 
         Spacer()

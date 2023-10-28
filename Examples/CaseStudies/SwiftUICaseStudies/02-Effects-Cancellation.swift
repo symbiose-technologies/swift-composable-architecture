@@ -67,7 +67,9 @@ struct EffectsCancellation: Reducer {
 // MARK: - Feature view
 
 struct EffectsCancellationView: View {
-  let store: StoreOf<EffectsCancellation>
+  @State var store = Store(initialState: EffectsCancellation.State()) {
+    EffectsCancellation()
+  }
   @Environment(\.openURL) var openURL
 
   var body: some View {
@@ -80,7 +82,7 @@ struct EffectsCancellationView: View {
         Section {
           Stepper(
             "\(viewStore.count)",
-            value: viewStore.binding(get: \.count, send: EffectsCancellation.Action.stepperChanged)
+            value: viewStore.binding(get: \.count, send: { .stepperChanged($0) })
           )
 
           if viewStore.isFactRequestInFlight {

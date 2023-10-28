@@ -229,17 +229,17 @@ public struct WithViewStore<ViewState, ViewAction, Content: View>: View {
   ///
   ///   var body: some View {
   ///     WithViewStore(self.store, observe: \.selectedTab) { viewStore in
-  ///       TabView(selection: viewStore.binding(send: AppFeature.Action.tabSelected) {
+  ///       TabView(selection: viewStore.binding(send: { .tabSelected($0) }) {
   ///         ActivityView(
-  ///           store: self.store.scope(state: \.activity, action: AppFeature.Action.activity)
+  ///           store: self.store.scope(state: \.activity, action: { .activity($0) })
   ///         )
   ///         .tag(AppFeature.Tab.activity)
   ///         SearchView(
-  ///           store: self.store.scope(state: \.search, action: AppFeature.Action.search)
+  ///           store: self.store.scope(state: \.search, action: { .search($0) })
   ///         )
   ///         .tag(AppFeature.Tab.search)
   ///         ProfileView(
-  ///           store: self.store.scope(state: \.profile, action: AppFeature.Action.profile)
+  ///           store: self.store.scope(state: \.profile, action: { .profile($0) })
   ///         )
   ///         .tag(AppFeature.Tab.profile)
   ///       }
@@ -319,17 +319,17 @@ public struct WithViewStore<ViewState, ViewAction, Content: View>: View {
   ///
   ///   var body: some View {
   ///     WithViewStore(self.store, observe: \.selectedTab) { viewStore in
-  ///       TabView(selection: viewStore.binding(send: AppFeature.Action.tabSelected) {
+  ///       TabView(selection: viewStore.binding(send: { .tabSelected($0) }) {
   ///         ActivityView(
-  ///           store: self.store.scope(state: \.activity, action: AppFeature.Action.activity)
+  ///           store: self.store.scope(state: \.activity, action: { .activity($0) })
   ///         )
   ///         .tag(AppFeature.Tab.activity)
   ///         SearchView(
-  ///           store: self.store.scope(state: \.search, action: AppFeature.Action.search)
+  ///           store: self.store.scope(state: \.search, action: { .search($0) })
   ///         )
   ///         .tag(AppFeature.Tab.search)
   ///         ProfileView(
-  ///           store: self.store.scope(state: \.profile, action: AppFeature.Action.profile)
+  ///           store: self.store.scope(state: \.profile, action: { .profile($0) })
   ///         )
   ///         .tag(AppFeature.Tab.profile)
   ///       }
@@ -409,17 +409,17 @@ extension WithViewStore where ViewState: Equatable, Content: View {
   ///
   ///   var body: some View {
   ///     WithViewStore(self.store, observe: \.selectedTab) { viewStore in
-  ///       TabView(selection: viewStore.binding(send: AppFeature.Action.tabSelected) {
+  ///       TabView(selection: viewStore.binding(send: { .tabSelected($0) }) {
   ///         ActivityView(
-  ///           store: self.store.scope(state: \.activity, action: AppFeature.Action.activity)
+  ///           store: self.store.scope(state: \.activity, action: { .activity($0) })
   ///         )
   ///         .tag(AppFeature.Tab.activity)
   ///         SearchView(
-  ///           store: self.store.scope(state: \.search, action: AppFeature.Action.search)
+  ///           store: self.store.scope(state: \.search, action: { .search($0) })
   ///         )
   ///         .tag(AppFeature.Tab.search)
   ///         ProfileView(
-  ///           store: self.store.scope(state: \.profile, action: AppFeature.Action.profile)
+  ///           store: self.store.scope(state: \.profile, action: { .profile($0) })
   ///         )
   ///         .tag(AppFeature.Tab.profile)
   ///       }
@@ -435,8 +435,6 @@ extension WithViewStore where ViewState: Equatable, Content: View {
   ///   - toViewState: A function that transforms store state into observable view state. All
   ///   changes to the view state will cause the `WithViewStore` to re-compute its view.
   ///   - fromViewAction: A function that transforms view actions into store action.
-  ///   - isDuplicate: A function to determine when two `ViewState` values are equal. When values
-  ///     are equal, repeat view computations are removed.
   ///   - content: A function that can generate content from a view store.
   public init<State, Action>(
     _ store: Store<State, Action>,
@@ -498,17 +496,17 @@ extension WithViewStore where ViewState: Equatable, Content: View {
   ///
   ///   var body: some View {
   ///     WithViewStore(self.store, observe: \.selectedTab) { viewStore in
-  ///       TabView(selection: viewStore.binding(send: AppFeature.Action.tabSelected) {
+  ///       TabView(selection: viewStore.binding(send: { .tabSelected($0) }) {
   ///         ActivityView(
-  ///           store: self.store.scope(state: \.activity, action: AppFeature.Action.activity)
+  ///           store: self.store.scope(state: \.activity, action: { .activity($0) })
   ///         )
   ///         .tag(AppFeature.Tab.activity)
   ///         SearchView(
-  ///           store: self.store.scope(state: \.search, action: AppFeature.Action.search)
+  ///           store: self.store.scope(state: \.search, action: { .search($0) })
   ///         )
   ///         .tag(AppFeature.Tab.search)
   ///         ProfileView(
-  ///           store: self.store.scope(state: \.profile, action: AppFeature.Action.profile)
+  ///           store: self.store.scope(state: \.profile, action: { .profile($0) })
   ///         )
   ///         .tag(AppFeature.Tab.profile)
   ///       }
@@ -523,8 +521,6 @@ extension WithViewStore where ViewState: Equatable, Content: View {
   ///   - store: A store.
   ///   - toViewState: A function that transforms store state into observable view state. All
   ///   changes to the view state will cause the `WithViewStore` to re-compute its view.
-  ///   - isDuplicate: A function to determine when two `ViewState` values are equal. When values
-  ///     are equal, repeat view computations are removed.
   ///   - content: A function that can generate content from a view store.
   public init<State>(
     _ store: Store<State, ViewAction>,

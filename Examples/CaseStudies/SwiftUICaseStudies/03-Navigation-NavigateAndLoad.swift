@@ -58,7 +58,9 @@ struct NavigateAndLoad: Reducer {
 // MARK: - Feature view
 
 struct NavigateAndLoadView: View {
-  let store: StoreOf<NavigateAndLoad>
+  @State var store = Store(initialState: NavigateAndLoad.State()) {
+    NavigateAndLoad()
+  }
 
   var body: some View {
     WithViewStore(self.store, observe: { $0 }) { viewStore in
@@ -67,22 +69,19 @@ struct NavigateAndLoadView: View {
           AboutView(readMe: readMe)
         }
         NavigationLink(
-          destination: IfLetStore(
-            self.store.scope(
-              state: \.optionalCounter,
-              action: NavigateAndLoad.Action.optionalCounter
-            )
+          "Load optional counter",
+          isActive: viewStore.binding(
+            get: \.isNavigationActive,
+            send: { .setNavigation(isActive: $0) }
+          )
+        ) {
+          IfLetStore(
+            self.store.scope(state: \.optionalCounter, action: { .optionalCounter($0) })
           ) {
             CounterView(store: $0)
           } else: {
             ProgressView()
-          },
-          isActive: viewStore.binding(
-            get: \.isNavigationActive,
-            send: NavigateAndLoad.Action.setNavigation(isActive:)
-          )
-        ) {
-          Text("Load optional counter")
+          }
         }
       }
     }
