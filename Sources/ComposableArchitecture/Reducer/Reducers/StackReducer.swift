@@ -101,6 +101,7 @@ public struct StackState<Element> {
   }
 }
 
+
 extension StackState: RandomAccessCollection, RangeReplaceableCollection {
   public var startIndex: Int { self._dictionary.keys.startIndex }
   public var endIndex: Int { self._dictionary.keys.endIndex }
@@ -167,6 +168,18 @@ extension StackState: CustomDumpReflectable {
     Mirror(self, unlabeledChildren: Array(zip(self.ids, self)), displayStyle: .dictionary)
   }
 }
+
+///MARK Symbiose Modifications
+public extension StackState {
+    
+    mutating func pushItem(_ element: Element) {
+        @Dependency(\.stackElementID) var stackElementID
+        let elementId = stackElementID()
+        self._dictionary[elementId] = element
+    }
+    
+}
+
 
 /// A wrapper type for actions that can be presented in a navigation stack.
 ///

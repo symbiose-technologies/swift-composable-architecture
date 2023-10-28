@@ -28,6 +28,25 @@ extension View {
         body(self, $item.isPresent(), destination)
       }
     }
+    @_spi(Presentation)
+    public func presentationId<State: Identifiable, Action, Content: View>(
+        store: Store<PresentationState<State>, PresentationAction<Action>>,
+        @ViewBuilder body: @escaping (
+          _ content: Self,
+          _ item: Binding<AnyIdentifiable?>,
+          _ destination: DestinationContent<State, Action>
+        ) -> Content
+      ) -> some View {
+        self.presentation(
+          store: store,
+          state: { $0 },
+          id: { $0.wrappedValue.map { stateVal in AnyHashable(stateVal.id) } },
+          action: { $0 },
+          body: body
+        )
+      }
+    
+    
 
   @_disfavoredOverload
   @_spi(Presentation)
