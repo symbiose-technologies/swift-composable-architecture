@@ -183,6 +183,19 @@ extension StackState: Hashable where Element: Hashable {
   }
 }
 
+///MARK Symbiose Modifications
+public extension StackState {
+    
+    mutating func pushItem(_ element: Element) {
+        @Dependency(\.stackElementID) var stackElementID
+        let elementId = stackElementID()
+        self._dictionary[elementId] = element
+    }
+    
+}
+
+
+
 // NB: We can remove `@unchecked` when swift-collections 1.1 is released.
 extension StackState: @unchecked Sendable where Element: Sendable {}
 

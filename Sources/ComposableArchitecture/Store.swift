@@ -139,6 +139,8 @@ public final class Store<State, Action> {
   @_spi(Internals) public let rootStore: RootStore
   private let toState: PartialToState<State>
   private let fromAction: (Action) -> Any
+  public var symbioseState: State { self.currentState } 
+
 
   /// Initializes a store from an initial state and a reducer.
   ///
