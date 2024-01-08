@@ -5,8 +5,8 @@ import PackageDescription
 let package = Package(
   name: "swift-composable-architecture",
   platforms: [
-    .iOS(.v13),
-    .macOS(.v10_15),
+    .iOS(.v16),
+    .macOS(.v13),
     .tvOS(.v13),
     .watchOS(.v6),
   ],
@@ -28,11 +28,13 @@ let package = Package(
     .package(url: "https://github.com/pointfreeco/swift-identified-collections", from: "1.0.0"),
     .package(url: "https://github.com/pointfreeco/swiftui-navigation", from: "1.1.0"),
     .package(url: "https://github.com/pointfreeco/xctest-dynamic-overlay", from: "1.0.0"),
+//    .package(url: "https://github.com/symbiose-technologies/swiftui-stack.git", branch: "sym-dev"),
   ],
   targets: [
     .target(
       name: "ComposableArchitecture",
       dependencies: [
+//        .product(name: "SwiftUIStack", package: "swiftui-stack"),
         .product(name: "CasePaths", package: "swift-case-paths"),
         .product(name: "CombineSchedulers", package: "combine-schedulers"),
         .product(name: "ConcurrencyExtras", package: "swift-concurrency-extras"),
