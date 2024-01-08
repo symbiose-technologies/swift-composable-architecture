@@ -1305,6 +1305,39 @@ extension TestStore where State: Equatable {
     )
   }
 
+  private func _receive<Value: Equatable>(
+    _ actionCase: AnyCasePath<Action, Value>,
+    _ value: Value,
+    assert updateStateToExpectedResult: ((inout State) throws -> Void)? = nil,
+    file: StaticString = #file,
+    line: UInt = #line
+  ) {
+    self.receiveAction(
+      matching: { actionCase.extract(from: $0) == value },
+      failureMessage: "Expected to receive an action matching case path, but didn't get one.",
+      unexpectedActionDescription: { receivedAction in
+        var action = ""
+        if actionCase.extract(from: receivedAction) != nil,
+          let difference = diff(actionCase.embed(value), receivedAction, format: .proportional)
+        {
+          action.append(
+            """
+            \(difference.indent(by: 2))
+
+            (Expected: −, Actual: +)
+            """
+          )
+        } else {
+          customDump(receivedAction, to: &action, indent: 2)
+        }
+        return action
+      },
+      updateStateToExpectedResult,
+      file: file,
+      line: line
+    )
+  }
+
   // NB: Only needed until Xcode ships a macOS SDK that uses the 5.7 standard library.
   // See: https://forums.swift.org/t/xcode-14-rc-cannot-specialize-protocol-type/60171/15
   #if (canImport(RegexBuilder) || !os(macOS) && !targetEnvironment(macCatalyst))
@@ -1465,6 +1498,67 @@ extension TestStore where State: Equatable {
     )
   }
 
+  /// Asserts an action was received matching a case path with a specific payload, and asserts
+  /// how the state changes.
+  ///
+  /// This method is similar to ``receive(_:timeout:assert:file:line:)-6325h``, except it allows
+  /// you to assert on the value inside the action too.
+  ///
+  /// It can be useful when asserting on delegate actions sent by a child feature:
+  ///
+  /// ```swift
+  /// await store.receive(\.delegate.success, "Hello!")
+  /// ```
+  ///
+  /// When the store's ``exhaustivity`` is set to anything other than ``Exhaustivity/off``, a grey
+  /// information box will show next to the `store.receive` line in Xcode letting you know what
+  /// data was in the effect that you chose not to assert on.
+  ///
+  /// - Parameters:
+  ///   - actionCase: A case path identifying the case of an action to enum to receive
+  ///   - value: The value to match in the action.
+  ///   - duration: The amount of time to wait for the expected action.
+  ///   - updateStateToExpectedResult: A closure that asserts state changed by sending the action
+  ///     to the store. The mutable state sent to this closure must be modified to match the state
+  ///     of the store after processing the given action. Do not provide a closure if no change is
+  ///     expected.
+  @MainActor
+  @_disfavoredOverload
+  public func receive<Value: Equatable>(
+    _ actionCase: CaseKeyPath<Action, Value>,
+    _ value: Value,
+    timeout nanoseconds: UInt64? = nil,
+    assert updateStateToExpectedResult: ((_ state: inout State) throws -> Void)? = nil,
+    file: StaticString = #file,
+    line: UInt = #line
+  ) async
+  where Action: CasePathable {
+    let actionCase = AnyCasePath(actionCase)
+    await XCTFailContext.$current.withValue(XCTFailContext(file: file, line: line)) {
+      guard !self.reducer.inFlightEffects.isEmpty
+      else {
+        _ = {
+          self._receive(
+            actionCase, value, assert: updateStateToExpectedResult, file: file, line: line
+          )
+        }()
+        return
+      }
+      await self.receiveAction(
+        matching: { actionCase.extract(from: $0) != nil },
+        timeout: nanoseconds,
+        file: file,
+        line: line
+      )
+      _ = {
+        self._receive(
+          actionCase, value, assert: updateStateToExpectedResult, file: file, line: line
+        )
+      }()
+      await Task.megaYield()
+    }
+  }
+
   @available(
     iOS,
     deprecated: 9999,
@@ -1563,6 +1657,56 @@ extension TestStore where State: Equatable {
     ) async {
       await self.receive(
         AnyCasePath(actionCase),
+        timeout: duration,
+        assert: updateStateToExpectedResult,
+        file: file,
+        line: line
+      )
+    }
+
+    /// Asserts an action was received matching a case path with a specific payload, and asserts
+    /// how the state changes.
+    ///
+    /// This method is similar to ``receive(_:timeout:assert:file:line:)-6325h``, except it allows
+    /// you to assert on the value inside the action too.
+    ///
+    /// It can be useful when asserting on delegate actions sent by a child feature:
+    ///
+    /// ```swift
+    /// await store.receive(\.delegate.success, "Hello!")
+    /// ```
+    ///
+    /// When the store's ``exhaustivity`` is set to anything other than ``Exhaustivity/off``, a grey
+    /// information box will show next to the `store.receive` line in Xcode letting you know what
+    /// data was in the effect that you chose not to assert on.
+    ///
+    /// - Parameters:
+    ///   - actionCase: A case path identifying the case of an action to enum to receive
+    ///   - value: The value to match in the action.
+    ///   - duration: The amount of time to wait for the expected action.
+    ///   - updateStateToExpectedResult: A closure that asserts state changed by sending the action
+    ///     to the store. The mutable state sent to this closure must be modified to match the state
+    ///     of the store after processing the given action. Do not provide a closure if no change is
+    ///     expected.
+    @MainActor
+    @_disfavoredOverload
+    @available(iOS 16, macOS 13, tvOS 16, watchOS 9, *)
+    public func receive<Value: Equatable>(
+      _ actionCase: CaseKeyPath<Action, Value>,
+      _ value: Value,
+      timeout duration: Duration,
+      assert updateStateToExpectedResult: ((_ state: inout State) throws -> Void)? = nil,
+      file: StaticString = #file,
+      line: UInt = #line
+    ) async
+    where Action: CasePathable {
+      await self.receive(
+        AnyCasePath(
+          embed: { actionCase($0) },
+          extract: { action in
+            action[case: actionCase].flatMap { $0 == value ? $0 : nil }
+          }
+        ),
         timeout: duration,
         assert: updateStateToExpectedResult,
         file: file,

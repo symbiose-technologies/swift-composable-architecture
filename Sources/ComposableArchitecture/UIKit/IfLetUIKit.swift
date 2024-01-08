@@ -56,11 +56,11 @@ extension Store {
         if var state = state {
           unwrap(
             self.scope(
+              id: self.id(state: \.!, action: \.self),
               state: ToState {
                 state = $0 ?? state
                 return state
               },
-              id: self.id(state: \.!, action: \.self),
               action: { $0 },
               isInvalid: { $0 == nil }
             )

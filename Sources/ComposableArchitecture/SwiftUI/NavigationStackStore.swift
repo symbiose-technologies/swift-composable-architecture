@@ -105,11 +105,11 @@ public struct NavigationStackStore<State, Action, Root: View, Destination: View>
       return destination(
         store
           .scope(
+            id: store.id(state: \.[id:component.id]!, action: \.[id:component.id]),
             state: ToState {
               element = $0[id: component.id] ?? element
               return element
             },
-            id: store.id(state: \.[id:component.id]!, action: \.[id:component.id]),
             action: { .element(id: component.id, action: $0) },
             isInvalid: { !$0.ids.contains(component.id) }
           )
@@ -144,11 +144,11 @@ public struct NavigationStackStore<State, Action, Root: View, Destination: View>
       return SwitchStore(
         store
           .scope(
+            id: store.id(state: \.[id:component.id]!, action: \.[id:component.id]),
             state: ToState {
-              element = $0[id: component.id] ?? component.element
+              element = $0[id: component.id] ?? element
               return element
             },
-            id: store.id(state: \.[id:component.id]!, action: \.[id:component.id]),
             action: { .element(id: component.id, action: $0) },
             isInvalid: { !$0.ids.contains(component.id) }
           )

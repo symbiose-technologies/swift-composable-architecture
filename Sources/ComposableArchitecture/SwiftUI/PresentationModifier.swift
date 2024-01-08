@@ -215,8 +215,8 @@ public struct PresentationStore<
     ) -> Content
   ) where State == DestinationState, Action == DestinationAction {
     let store = store.scope(
-      state: ToState(\.self),
       id: nil,
+      state: ToState(\.self),
       action: { $0 },
       isInvalid: { $0.wrappedValue == nil }
     )
@@ -231,8 +231,8 @@ public struct PresentationStore<
     self.toID = toID
     self.fromDestinationAction = { $0 }
     self.destinationStore = store.scope(
-      state: ToState(\.wrappedValue),
       id: store.id(state: \.wrappedValue, action: \.presented),
+      state: ToState(\.wrappedValue),
       action: { .presented($0) },
       isInvalid: nil
     )
@@ -251,8 +251,8 @@ public struct PresentationStore<
     ) -> Content
   ) {
     let store = store.scope(
-      state: ToState(\.self),
       id: nil,
+      state: ToState(\.self),
       action: { $0 },
       isInvalid: { $0.wrappedValue.flatMap(toDestinationState) == nil }
     )
@@ -285,11 +285,12 @@ public struct PresentationStore<
             ? toID($0).map { AnyIdentifiable(Identified($0) { $0 }) }
             : nil
         },
-        compactSend: {
+        compactSend: { [weak viewStore = self.viewStore] in
           guard
+            let viewStore = viewStore,
             $0 == nil,
-            self.viewStore.wrappedValue != nil,
-            id == nil || self.toID(self.viewStore.state) == id
+            viewStore.wrappedValue != nil,
+            id == nil || self.toID(viewStore.state) == id
           else { return nil }
           return .dismiss
         }
@@ -317,8 +318,8 @@ public struct DestinationContent<State, Action> {
   ) -> some View {
     IfLetStore(
       self.store.scope(
-        state: ToState(returningLastNonNilValue { $0 }),
         id: self.store.id(state: \.self, action: \.self),
+        state: ToState(returningLastNonNilValue { $0 }),
         action: { $0 },
         isInvalid: nil
       ),

@@ -155,12 +155,13 @@ public final class Store<State, Action> {
     withDependencies prepareDependencies: ((inout DependencyValues) -> Void)? = nil
   ) where R.State == State, R.Action == Action {
     if let prepareDependencies = prepareDependencies {
-      let (initialState, reducer) = withDependencies(prepareDependencies) {
-        (initialState(), reducer())
+      let (initialState, reducer, dependencies) = withDependencies(prepareDependencies) {
+        @Dependency(\.self) var dependencies
+        return (initialState(), reducer(), dependencies)
       }
       self.init(
         initialState: initialState,
-        reducer: reducer.transformDependency(\.self, transform: prepareDependencies)
+        reducer: reducer.dependency(\.self, dependencies)
       )
     } else {
       self.init(
@@ -381,8 +382,8 @@ public final class Store<State, Action> {
     action: CaseKeyPath<Action, ChildAction>
   ) -> Store<ChildState, ChildAction> {
     self.scope(
-      state: ToState(state),
       id: self.id(state: state, action: action),
+      state: ToState(state),
       action: { action($0) },
       isInvalid: nil
     )
@@ -413,8 +414,8 @@ public final class Store<State, Action> {
     action fromChildAction: @escaping (_ childAction: ChildAction) -> Action
   ) -> Store<ChildState, ChildAction> {
     self.scope(
-      state: ToState(toChildState),
       id: nil,
+      state: ToState(toChildState),
       action: fromChildAction,
       isInvalid: nil
     )
@@ -429,8 +430,8 @@ public final class Store<State, Action> {
   @_spi(Internals)
   public
     func scope<ChildState, ChildAction>(
-      state: ToState<State, ChildState>,
       id: ScopeID<State, Action>?,
+      state: ToState<State, ChildState>,
       action fromChildAction: @escaping (ChildAction) -> Action,
       isInvalid: ((State) -> Bool)?
     ) -> Store<ChildState, ChildAction>
