@@ -34,7 +34,6 @@ let package = Package(
     .target(
       name: "ComposableArchitecture",
       dependencies: [
-//        .product(name: "SwiftUIStack", package: "swiftui-stack"),
         .product(name: "CasePaths", package: "swift-case-paths"),
         .product(name: "CombineSchedulers", package: "combine-schedulers"),
         .product(name: "ConcurrencyExtras", package: "swift-concurrency-extras"),

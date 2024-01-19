@@ -1,77 +1,5 @@
 import OrderedCollections
 import SwiftUI
-import SwiftUIStack
-
-//@available(iOS 16, macOS 13, tvOS 16, watchOS 9, *)
-//public struct SwiftStackStore<State, Action, Root: View, Destination: View>: View {
-//  private let root: Root
-//  private let destination: (Component<State>) -> Destination
-//  @ObservedObject private var viewStore: ViewStore<StackState<State>, StackAction<State, Action>>
-//
-//  /// Creates a navigation stack with a store of stack state and actions.
-//  ///
-//  /// - Parameters:
-//  ///   - path: A store of stack state and actions to power this stack.
-//  ///   - root: The view to display when the stack is empty.
-//  ///   - destination: A view builder that defines a view to display when an element is appended to
-//  ///     the stack's state. The closure takes one argument, which is a store of the value to
-//  ///     present.
-//  public init(
-//    _ store: Store<StackState<State>, StackAction<State, Action>>,
-//    @ViewBuilder root: () -> Root,
-//    @ViewBuilder destination: @escaping (_ store: Store<State, Action>) -> Destination
-//  ) {
-//    self.root = root()
-//    self.destination = { component in
-//      var element = component.element
-//      return destination(
-//        store
-//          .scope(
-//            state: ToState {
-//              element = $0[id: component.id] ?? element
-//              return element
-//            },
-//            id: store.id(state: \.[id:component.id]!, action: \.[id:component.id]),
-//            action: { .element(id: component.id, action: $0) },
-//            isInvalid: { !$0.ids.contains(component.id) }
-//          )
-//      )
-//    }
-//    self._viewStore = ObservedObject(
-//      wrappedValue: ViewStore(
-//        store,
-//        observe: { $0 },
-//        removeDuplicates: { areOrderedSetsDuplicates($0.ids, $1.ids) }
-//      )
-//    )
-//  }
-//
-//
-//  public var body: some View {
-//    Stack(
-//      path: self.viewStore.binding(
-//        get: { $0.path.toSwiftStackPath() },
-//        compactSend: { newPath in
-//            if newPath.count > self.viewStore.path.count, 
-//                let componentRaw = newPath.values.last,
-//               let component = componentRaw.getValue(Component<State>.self) {
-//            return .push(id: component.id, state: component.element)
-//          } else if newPath.count < self.viewStore.path.count {
-//            return .popFrom(id: self.viewStore.path[newPath.count].id)
-//          } else {
-//            return nil
-//          }
-//        }
-//      )
-//    ) {
-//      self.root
-//        .environment(\.navigationDestinationType, State.self)
-//        .stackDestination(for: Component<State>.self) { component in
-//          NavigationDestinationView(component: component, destination: self.destination)
-//        }
-//    }
-//  }
-//}
 
 /// A navigation stack that is driven by a store.
 ///
@@ -372,9 +300,9 @@ extension StackState {
       }
     }
       
-      func toSwiftStackPath() -> StackPath {
-          return .init(self)
-      }
+//      func toSwiftStackPath() -> StackPath {
+//          return .init(self)
+//      }
 //      static func createFromSwiftStackPath(_ path: StackPath) -> Self {
 //          return .init(path)
 //      }
