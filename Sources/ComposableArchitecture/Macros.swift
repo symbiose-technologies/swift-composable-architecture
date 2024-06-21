@@ -137,12 +137,6 @@ public macro ObsvCoW() =
 
 
 
-@attached(accessor, names: named(init), named(get), named(set))
-@attached(peer, names: prefixed(`$`), prefixed(_))
-public macro ObsvCoW() =
-  #externalMacro(module: "ComposableArchitectureMacros", type: "ObsvCoWMacro")
-
-
 
 /// Wraps a property with ``PresentationState`` and observes it.
 ///
