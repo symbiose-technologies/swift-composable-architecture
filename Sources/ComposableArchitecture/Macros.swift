@@ -128,6 +128,22 @@ public macro ObservationStateTracked() =
 public macro ObservationStateIgnored() =
   #externalMacro(module: "ComposableArchitectureMacros", type: "ObservationStateIgnoredMacro")
 
+
+
+@attached(accessor, names: named(init), named(get), named(set))
+@attached(peer, names: prefixed(`$`), prefixed(_))
+public macro ObsvCoW() =
+  #externalMacro(module: "ComposableArchitectureMacros", type: "ObsvCoWMacro")
+
+
+
+@attached(accessor, names: named(init), named(get), named(set))
+@attached(peer, names: prefixed(`$`), prefixed(_))
+public macro ObsvCoW() =
+  #externalMacro(module: "ComposableArchitectureMacros", type: "ObsvCoWMacro")
+
+
+
 /// Wraps a property with ``PresentationState`` and observes it.
 ///
 /// Use this macro instead of ``PresentationState`` when you adopt the ``ObservableState()``
@@ -194,3 +210,5 @@ public macro ViewAction<R: Reducer>(for: R.Type) =
   #externalMacro(
     module: "ComposableArchitectureMacros", type: "ViewActionMacro"
   ) where R.Action: ViewAction
+
+
