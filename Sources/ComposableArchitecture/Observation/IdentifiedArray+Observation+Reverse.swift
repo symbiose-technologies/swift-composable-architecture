@@ -25,7 +25,7 @@ extension Store where State: ObservableState {
     ) -> _ReverseStoreCollection<ElementID, ElementState, ElementAction> {
       #if DEBUG
         if !self.canCacheChildren {
-          runtimeWarn(
+          reportIssue(
             """
             Scoping from uncached \(self) in reverse is not compatible with observation. Ensure that all \
             parent store scoping operations take key paths and case key paths instead of transform \

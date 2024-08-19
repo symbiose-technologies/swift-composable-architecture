@@ -133,7 +133,7 @@ public struct CoWState<State> {
           {
             description = caseName
           }
-          runtimeWarn(
+          reportIssue(
             """
             Can't modify unrelated case\(description.map { " \($0.debugDescription)" } ?? "")
             """
