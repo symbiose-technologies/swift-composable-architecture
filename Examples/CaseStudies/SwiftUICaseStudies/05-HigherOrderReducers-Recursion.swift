@@ -14,8 +14,12 @@ struct Nested {
   struct State: Equatable, Identifiable {
     let id: UUID
     var name: String = ""
-    var rows: IdentifiedArrayOf<State> = []
+//    var rows: IdentifiedArrayOf<State> = []
 
+    @ObsvCoW
+    var rows: IdentifiedArrayOf<State>
+      
+      
     init(id: UUID? = nil, name: String = "", rows: IdentifiedArrayOf<State> = []) {
       @Dependency(\.uuid) var uuid
       self.id = id ?? uuid()
@@ -62,6 +66,9 @@ struct NestedView: View {
   @Bindable var store: StoreOf<Nested>
 
   var body: some View {
+      let _ = debugPrint(store.state.id)
+      let _ = Self._printChanges()
+      
     Form {
       Section {
         AboutView(readMe: readMe)
