@@ -234,6 +234,16 @@ extension StackState: CustomDebugStringConvertible {
   }
 }
 
+///MARK Symbiose Modifications
+public extension StackState {
+
+    mutating func pushItem(_ element: Element) {
+        @Dependency(\.stackElementID) var stackElementID
+        let elementId = stackElementID()
+        self._dictionary[elementId] = element
+    }
+
+}
 extension StackState: CustomDumpReflectable {
   public var customDumpMirror: Mirror {
     Mirror(self, unlabeledChildren: Array(zip(self.ids, self)), displayStyle: .dictionary)

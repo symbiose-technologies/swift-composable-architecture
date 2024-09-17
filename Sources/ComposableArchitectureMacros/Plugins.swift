@@ -12,5 +12,6 @@ struct MacrosPlugin: CompilerPlugin {
     ReducerCaseEphemeralMacro.self,
     ReducerCaseIgnoredMacro.self,
     ViewActionMacro.self,
+    ObsvCoWMacro.self
   ]
 }
