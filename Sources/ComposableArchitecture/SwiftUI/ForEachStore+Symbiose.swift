@@ -27,55 +27,9 @@ extension IdentifiedArray {
 }
 
 
-public struct ForEachStoreReversed<
-    EachState, EachAction, Data: Collection, ID: Hashable, Content: View
->: DynamicViewContent {
-    public let data: Data
-    let content: Content
-    public init<EachContent>(
-        _ store: Store<IdentifiedArray<ID, EachState>, IdentifiedAction<ID, EachAction>>,
-        @ViewBuilder content: @escaping (_ store: Store<EachState, EachAction>) -> EachContent
-    )
-    where
-        Data == IdentifiedArray<ID, EachState>,
-        Content == WithViewStore<
-            IdentifiedArray<ID, EachState>, IdentifiedAction<ID, EachAction>,
-            ForEach<IdentifiedArray<ID, EachState>, ID, EachContent>
-        >
-    {
-        self.data = store.withState { $0 }
-        self.content = WithViewStore(
-            store,
-            observe: { $0.reversedCp() },
-            removeDuplicates: { areOrderedSetsDuplicates($0.ids, $1.ids) }
-        ) { viewStore in
-            // Convert the reversed collection into an Array
-            ForEach(viewStore.state, id: viewStore.state.id) { element in
-                let id = element[keyPath: viewStore.state.id]
-                var element = element
-                content(
-                    store.scope(
-                        id: store.id(state: \.[id: id]!, action: \.[id: id]),
-                        state: ToState {
-                            element = $0[id: id] ?? element
-                            return element
-                        },
-                        action: { .element(id: id, action: $0) },
-                        isInvalid: { !$0.ids.contains(id) }
-                    )
-                )
-            }
-        }
-    }
-    public var body: some View {
-      self.content
-    }
-}
-
-
 public struct ForEachStoreWithID<
-  EachState, EachAction, Data: Collection, ID: Hashable, Content: View
->: DynamicViewContent {
+  EachState, EachAction, Data: Collection, ID: Hashable & Sendable, Content: View
+>: View {
   public let data: Data
   let content: Content
 
@@ -85,6 +39,11 @@ public struct ForEachStoreWithID<
   /// - Parameters:
   ///   - store: A store on an identified array of data and an identified action.
   ///   - content: A function that can generate content given a store of an element.
+#if swift(<5.10)
+  @MainActor(unsafe)
+#else
+  @preconcurrency@MainActor
+#endif
   public init<EachContent>(
     _ store: Store<IdentifiedArray<ID, EachState>, IdentifiedAction<ID, EachAction>>,
     @ViewBuilder content: @escaping (_ id: ID, _ store: Store<EachState, EachAction>) -> EachContent
@@ -144,6 +103,11 @@ public struct ForEachStoreWithID<
     message:
       "Use an 'IdentifiedAction', instead. See the following migration guide for more information:\n\nhttps://pointfreeco.github.io/swift-composable-architecture/main/documentation/composablearchitecture/migratingto1.4#Identified-actions"
   )
+  #if swift(<5.10)
+    @MainActor(unsafe)
+  #else
+    @preconcurrency@MainActor
+  #endif
   public init<EachContent>(
     _ store: Store<IdentifiedArray<ID, EachState>, (id: ID, action: EachAction)>,
     @ViewBuilder content: @escaping (_ id: ID, _ store: Store<EachState, EachAction>) -> EachContent
@@ -184,9 +148,15 @@ public struct ForEachStoreWithID<
   }
 }
 
+#if compiler(>=6)
+  extension ForEachStoreWithID: @preconcurrency DynamicViewContent {}
+#else
+  extension ForEachStoreWithID: DynamicViewContent {}
+#endif
+
 
 extension Case {
-  fileprivate subscript<ID: Hashable, Action>(id id: ID) -> Case<Action>
+  fileprivate subscript<ID: Hashable & Sendable, Action>(id id: ID) -> Case<Action>
   where Value == (id: ID, action: Action) {
     Case<Action>(
       embed: { (id: id, action: $0) },

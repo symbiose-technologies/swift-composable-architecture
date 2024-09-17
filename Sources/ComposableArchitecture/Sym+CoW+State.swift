@@ -171,13 +171,13 @@ extension CoWState: Hashable where State: Hashable {
 extension CoWState: Sendable where State: Sendable {}
 
 extension CoWState: Decodable where State: Decodable {
-  public init(from decoder: Decoder) throws {
+  public init(from decoder: any Decoder) throws {
     self.init(wrappedValue: try decoder.singleValueContainer().decode(State.self))
   }
 }
 
 extension CoWState: Encodable where State: Encodable {
-  public func encode(to encoder: Encoder) throws {
+  public func encode(to encoder: any Encoder) throws {
     var container = encoder.singleValueContainer()
     try container.encode(self.wrappedValue)
   }
