@@ -12,6 +12,7 @@ struct ContactsFeature {
     case addButtonTapped
     case deleteButtonTapped(id: Contact.ID)
     case destination(PresentationAction<Destination.Action>)
+    @CasePathable
     enum Alert: Equatable {
       case confirmDeletion(id: Contact.ID)
     }
@@ -45,7 +46,7 @@ struct ContactsFeature {
       }
     }
     .ifLet(\.$destination, action: \.destination) {
-      Destination()
+      Destination.body
     }
   }
 }

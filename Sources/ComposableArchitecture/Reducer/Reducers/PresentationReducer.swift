@@ -400,6 +400,10 @@ extension Reducer {
   ///   - toPresentationAction: A case path from parent action to a case containing child actions.
   ///   - destination: A reducer that will be invoked with child actions against presented child
   ///     state.
+  ///   - fileID: The fileID.
+  ///   - filePath: The filePath.
+  ///   - line: The line.
+  ///   - column: The column.
   /// - Returns: A reducer that combines the child reducer with the parent reducer.
   @warn_unqualified_access
   @inlinable
@@ -642,8 +646,7 @@ public struct _PresentationReducer<Base: Reducer, Destination: Reducer>: Reducer
 
         • This action was sent to the store while destination state was "nil". Make sure that \
         actions for this reducer can only be sent from a store when state is present, or \
-        from effects that start from this reducer. In SwiftUI applications, use a Composable \
-        Architecture view modifier like "sheet(store:…)".
+        from effects that start from this reducer.
         """,
         fileID: fileID,
         filePath: filePath,

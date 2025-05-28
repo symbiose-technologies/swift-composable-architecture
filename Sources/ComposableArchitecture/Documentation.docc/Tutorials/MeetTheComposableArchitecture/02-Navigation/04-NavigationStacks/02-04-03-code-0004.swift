@@ -10,9 +10,9 @@ struct ContactsFeature {
   }
   enum Action {
     case addButtonTapped
-    case deleteButtonTapped(id: Contact.ID)
     case destination(PresentationAction<Destination.Action>)
-    case path(StackAction<ContactDetailFeature.State, ContactDetailFeature.Action>)
+    case path(StackActionOf<ContactDetailFeature>)
+    @CasePathable
     enum Alert: Equatable {
       case confirmDeletion(id: Contact.ID)
     }
@@ -39,11 +39,7 @@ struct ContactsFeature {
         
       case .destination:
         return .none
-        
-      case let .deleteButtonTapped(id: id):
-        state.destination = .alert(.deleteConfirmation(id: id))
-        return .none
-        
+
       case let .path(.element(id: id, action: .delegate(.confirmDeletion))):
         guard let detailState = state.path[id: id]
         else { return .none }
@@ -55,7 +51,7 @@ struct ContactsFeature {
       }
     }
     .ifLet(\.$destination, action: \.destination) {
-      Destination()
+      Destination.body
     }
     .forEach(\.path, action: \.path) {
       ContactDetailFeature()
