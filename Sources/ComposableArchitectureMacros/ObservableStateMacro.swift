@@ -45,8 +45,12 @@ public struct ObservableStateMacro {
     "\(moduleName).\(idName)"
   }
 
+  static let cowMacroName = "ObsvCoW"
+  static let cowStatePropertyWrapperName = "CoWState"
+    
   static let trackedMacroName = "ObservationStateTracked"
   static let ignoredMacroName = "ObservationStateIgnored"
+
   static let presentsMacroName = "Presents"
   static let presentationStatePropertyWrapperName = "PresentationState"
 
@@ -541,8 +545,14 @@ extension ObservableStateMacro: MemberAttributeMacro {
       renamed: ObservableStateMacro.presentsMacroName,
       context: context
     )
+      property.diagnose(
+        attribute: "CowState",
+        renamed: ObservableStateMacro.cowMacroName,
+        context: context
+      )
 
     if property.hasMacroApplication(ObservableStateMacro.presentsMacroName)
+        || property.hasMacroApplication(ObservableStateMacro.cowMacroName)
       || knownSupportedPropertyWrappers.contains(where: property.hasMacroApplication)
     {
       return [
@@ -639,6 +649,8 @@ public struct ObservationStateTrackedMacro: AccessorMacro {
     if property.hasMacroApplication(ObservableStateMacro.ignoredMacroName)
       || property.hasMacroApplication(ObservableStateMacro.presentationStatePropertyWrapperName)
       || property.hasMacroApplication(ObservableStateMacro.presentsMacroName)
+        || property.hasMacroApplication(ObservableStateMacro.cowStatePropertyWrapperName)
+        || property.hasMacroApplication(ObservableStateMacro.cowMacroName)
       || knownSupportedPropertyWrappers.contains(where: property.hasMacroApplication)
     {
       return []
@@ -698,6 +710,8 @@ extension ObservationStateTrackedMacro: PeerMacro {
     if property.hasMacroApplication(ObservableStateMacro.ignoredMacroName)
       || property.hasMacroApplication(ObservableStateMacro.presentationStatePropertyWrapperName)
       || property.hasMacroApplication(ObservableStateMacro.presentsMacroName)
+        || property.hasMacroApplication(ObservableStateMacro.cowStatePropertyWrapperName)
+        || property.hasMacroApplication(ObservableStateMacro.cowMacroName)
       || knownSupportedPropertyWrappers.contains(where: property.hasMacroApplication)
       || property.hasMacroApplication(ObservableStateMacro.trackedMacroName)
     {
@@ -725,5 +739,5 @@ public struct ObservationStateIgnoredMacro: AccessorMacro {
 }
 
 private let knownSupportedPropertyWrappers = [
-  "Shared", "SharedReader", "Fetch", "FetchAll", "FetchOne",
+  "Shared", "SharedReader", "Fetch", "FetchAll", "FetchOne", "ObsvCoW"
 ]
